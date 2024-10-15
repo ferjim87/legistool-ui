@@ -1,54 +1,85 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BrowserRouter as useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
-const CreateOrganization = () => {
+const OrganizationCreate = () => {
   const [name, setName] = useState('');
   const [country, setCountry] = useState('');
-  const [message, setMessage] = useState('');
+  const [countries, setCountries] = useState([]);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    const fetchCountries = async () => {
+      try {
+        const response = await axios.get('http://localhost:8080/api/country');
+        console.log('Response Status:', response.status); // Log status
+        console.log('Response Data:', response.data); // Log data
+        setCountries(response.data); // Assuming the response is an array of countries
+      } catch (error) {
+        console.error('Error fetching countries', error);
+      }
+    };
+    fetchCountries();
+  }, []);
 
-    const newOrg = { name, country }; // Default status
-
+  const handleSave = async () => {
     try {
-      await axios.post('http://localhost:8080/api/organization', newOrg);
-      setMessage('Organization created successfully!');
-      navigate('/'); // Redirect back to organizations page
+      const response = await axios.post('http://localhost:8080/api/organization', { name, country });
+      console.log('Response Status:', response.status); // Log status
+      console.log('Response Data:', response.data); // Log data
+      navigate('/organizations');
     } catch (error) {
-      setMessage('Error creating organization');
+      console.error('Error creating organization', error);
     }
+  };
+
+  const handleCancel = () => {
+    navigate('/organizations');
   };
 
   return (
       <div>
-        <h1>Create Organization</h1>
-        <form onSubmit={handleSubmit}>
+        <h2>Create New Organization</h2>
+        <form onSubmit={(e) => e.preventDefault()}>
           <div>
-            <label>Name:</label>
-            <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-            />
+            <label>
+              Name:
+              <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+              />
+            </label>
           </div>
           <div>
-            <label>Country:</label>
-            <input
-                type="text"
-                value={country}
-                onChange={(e) => setCountry(e.target.value)}
-                required
-            />
+            <label>
+              Country:
+              <select
+                  value={country}
+                  onChange={(e) => setCountry(e.target.value)}
+                  required
+              >
+                <option value="">Select a country</option>
+                {countries.map((country) => (
+                    <option key={country.code} value={country.code}>
+                      {country.name}
+                    </option>
+                ))}
+              </select>
+            </label>
           </div>
-          <button type="submit">Create</button>
+          <div>
+            <button type="button" onClick={handleSave}>
+              Save
+            </button>
+            <button type="button" onClick={handleCancel}>
+              Cancel
+            </button>
+          </div>
         </form>
-        {message && <p>{message}</p>}
       </div>
   );
 };
 
-export default CreateOrganization;
+export default OrganizationCreate;

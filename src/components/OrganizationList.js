@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
-const Organization = () => {
+const OrganizationList = () => {
   const [organizations, setOrganizations] = useState([]);
   const navigate = useNavigate();
 
@@ -12,7 +12,11 @@ const Organization = () => {
         const response = await axios.get('http://localhost:8080/api/organization');
         console.log('Response Status:', response.status); // Log status
         console.log('Response Data:', response.data); // Log data
-        setOrganizations(response.data.data);
+        if (response.data && Array.isArray(response.data.data)) {
+          setOrganizations(response.data.data);
+        } else {
+          setOrganizations([]); // Set to empty array if data structure is not as expected
+        }
       } catch(error) {
         console.error('Error fetching organizations:', error.response ? error.response.data : error.message);
       }
@@ -23,7 +27,11 @@ const Organization = () => {
   }, []);
 
   const handleAddOrganization = () => {
-    navigate('/create-organization'); // Redirect to create form
+    navigate('/organizations/create'); // Redirect to create form
+  };
+
+  const handleEditOrganization = (id) => {
+    navigate(`/organizations/${id}`); // Navigate to details
   };
 
   return (
@@ -46,6 +54,9 @@ const Organization = () => {
                 <td>{org.name}</td>
                 <td>{org.country}</td>
                 <td>{org.status}</td>
+                <td>
+                  <button onClick={() => handleEditOrganization(org.id)}>Edit</button>
+                </td>
               </tr>
           ))}
           </tbody>
@@ -54,4 +65,4 @@ const Organization = () => {
   );
 };
 
-export default Organization;
+export default OrganizationList;
